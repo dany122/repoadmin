@@ -49,6 +49,7 @@
 
     <div id="output"></div>
 </div>
+
 <script>
     // 2. إعدادات Firebase (نفس التي في الأدمن)
     const firebaseConfig = {
@@ -127,7 +128,7 @@
 
     function renderResearches(data, term = "") {
         const out = document.getElementById('output');
-        out.innerHTML = <h2 style="color:#8b5b29; text-align:center;">${currentCategory}</h2>;
+        out.innerHTML = `<h2 style="color:#8b5b29; text-align:center;">${currentCategory}</h2>`;
         
         if (!data) return;
 
