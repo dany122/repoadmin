@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم </title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; direction: rtl; }
+        .container { width: 94%; max-width: 750px; margin: 20px auto; background: white; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; }
+        .header { background: #8b5b29; padding: 25px; text-align: center; color: white; position: relative; }
+        .header a { position: absolute; right: 15px; top: 15px; color: white; background: rgba(0,0,0,0.2); padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.3); }
+        
+        .main-btn { background: #27ae60; color: white; border: none; padding: 18px; width: 90%; display: block; margin: 20px auto; border-radius: 12px; font-size: 1.2rem; font-weight: bold; cursor: pointer; }
+        
+        .section-box { border: 1px solid #e0e0e0; margin: 15px; border-radius: 12px; background: #fff; }
+        .section-header { background: #fdf5eb; padding: 12px; border-bottom: 2px solid #8b5b29; font-weight: bold; color: #8b5b29; display: flex; justify-content: space-between; align-items: center; }
+        .edit-cat-btn { background: #8b5b29; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }
+
+        .item { padding: 15px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 10px; }
+        .item-top { display: flex; justify-content: space-between; align-items: center; }
+        .btn-group { display: flex; gap: 5px; }
+        
+        .edit-btn { color: #2980b9; border: 1px solid #2980b9; background: none; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; }
+        .del-btn { color: #e74c3c; border: 1px solid #e74c3c; background: none; padding: 4px 10px; border-radius: 5px; cursor: pointer; font-size: 0.85rem; }
+
+        .modal { display: none; position: fixed; z-index: 1000; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+
+.modal-content { 
+background: white; 
+width: 90%; 
+max-width: 450px; 
+margin: 40px auto; 
+padding: 25px; 
+border-radius: 15px; 
+
+}
+
+input, textarea { 
+width: 100%; 
+padding: 12px; 
+margin: 10px 0; 
+border-radius: 8px; 
+border: 1px solid #ddd; 
+font-size: 1rem; 
+text-align: right; 
+
+}
+.home{
+
+display: block;
+transform: translateX(-215%);
+}
+h1{
+font-size: 15px;
+transform: translateY(65%);
+
+}
+    </style>
+</head>
+<body>
+
+<div class="container">
+ <div class="header">
+ <a href="user.html">صفحة المستخدم</a>
+<a class="home" href="index.html">الصفحة الرئيسية</a>
+<h1> لوحة التحكم الترابية </h1>
+    </div>
+    <button class="main-btn" onclick="openAddModal()"> إضافة بحث </button>
+    <div id="list"></div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"> محتى البحث </h3>
+        <input type="text" id="cIn" placeholder="عنوان القسم">
+        <input type="text" id="tIn" placeholder="العنوان">
+        <textarea id="txtIn" rows="4" placeholder="النص..."></textarea>
+        <div style="margin:10px 0;">اللون: <input type="color" id="colIn" value="#ffffff"></div>
+        
+        <input type="hidden" id="editCatIndex">
+        <input type="hidden" id="editItemIndex">
+
+        <button id="saveBtn" onclick="saveData()" style="width:100%; padding:15px; background:#8b5b29; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">حفظ</button>
+        <button onclick="closeModal()" style="width:100%; padding:10px; margin-top:10px; background:none; border:none; color:#999;">إلغاء</button>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('myLibV2') || '{}');
+
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = "إضافة بحث ";
+        document.getElementById('cIn').value = '';
+        document.getElementById('tIn').value = '';
+        document.getElementById('txtIn').value = '';
+        document.getElementById('editItemIndex').value = "-1"; // تعني إضافة وليس تعديل
+        document.getElementById('modal').style.display = 'block';
+    }
+
+    function editItem(catName, index) {
+        const item = db[catName][index];
+        document.getElementById('modalTitle').innerText = "تعديل البحث";
+        document.getElementById('cIn').value = catName;
+        document.getElementById('tIn').value = item.t;
+        document.getElementById('txtIn').value = item.x;
+        document.getElementById('colIn').value = item.color || "#ffffff";
+        document.getElementById('editCatIndex').value = catName;
+        document.getElementById('editItemIndex').value = index;
+        document.getElementById('modal').style.display = 'block';
+    }
+
+    function editCategoryName(oldName) {
+        const newName = prompt("أدخل الاسم الجديد للقسم:", oldName);
+        if (newName && newName !== oldName) {
+            db[newName] = db[oldName];
+            delete db[oldName];
+            saveAndRender();
+        }
+    }
+
+    function saveData() {
+        const cat = document.getElementById('cIn').value.trim();
+        const title = document.getElementById('tIn').value.trim();
+        const text = document.getElementById('txtIn').value.trim();
+        const color = document.getElementById('colIn').value;
+        const editIdx = document.getElementById('editItemIndex').value;
+        const oldCat = document.getElementById('editCatIndex').value;
+
+        if (!cat || !title || !text) return alert(" !اكمل البيانات ");
+
+        // إذا كنا في حالة تعديل
+        if (editIdx !== "-1") {
+            // إذا تغير اسم القسم، نحذف القديم وننقل للجديد
+            if (oldCat !== cat) {
+                db[oldCat].splice(editIdx, 1);
+                if (db[oldCat].length === 0) delete db[oldCat];
+                if (!db[cat]) db[cat] = [];
+                db[cat].push({ t: title, x: text, color: color });
+            } else {
+                db[cat][editIdx] = { t: title, x: text, color: color };
+            }
+        } else {
+            // حالة إضافة جديدة
+            if (!db[cat]) db[cat] = [];
+            db[cat].push({ t: title, x: text, color: color });
+        }
+
+        saveAndRender();
+        closeModal();
+    }
+
+    function del(c, i) {
+        if (confirm("هل أنت متأكد من حذف هذا البحث؟")) {
+            db[c].splice(i, 1);
+            if (db[c].length === 0) delete db[c];
+            saveAndRender();
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('myLibV2', JSON.stringify(db));
+        render();
+    }
+
+    function render() {
+        const div = document.getElementById('list');
+        div.innerHTML = '';
+        for (let c in db) {
+            let s = `
+            <div class="section-box">
+                <div class="section-header">
+                    <span> ${c}</span>
+                    <button class="edit-cat-btn" onclick="editCategoryName('${c}')">تعديل أسم القسم</button>
+                </div>`;
+            db[c].forEach((r, i) => {
+                s += `
+                <div class="item">
+                    <div class="item-top">
+                        <b>${r.t}</b>
+                        <div class="btn-group">
+                            <button class="edit-btn" onclick="editItem('${c}', ${i})">تعديل</button>
+                            <button class="del-btn" onclick="del('${c}', ${i})">حذف</button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            div.innerHTML += s + `</div>`;
+        }
+    }
+    render();
+</script>
+</body>
+</html>
