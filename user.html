@@ -47,50 +47,60 @@
             border-right: 4px solid #fbbf24; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
             margin-bottom: 12px; cursor: pointer; transition: 0.2s; color: #1e293b;
         }
+        
+        /* تحسين السكرول للحاويات */
+        .custom-scroll {
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .custom-scroll::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="theme-white h-screen flex flex-col">
 
     <div id="main-view" class="flex-1 flex flex-col h-full overflow-hidden">
-        <header class="p-6 flex justify-between items-center">
+        <header class="p-6 flex justify-between items-center shrink-0">
             <div>
                 <h1 class="text-2xl font-black text-slate-900">المكتبة</h1>
-                <p class="text-[10px] text-slate-400 font-bold border-r-2 border-green-600 pr-2 mt-1 uppercase">البحث المتخصص</p>
+                <p class="text-[10px] text-slate-400 font-bold border-r-2 border-green-600 pr-2 mt-1 uppercase">الترابية </p>
             </div>
             <button onclick="openGlobalSearch()" class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center border border-slate-100">🔍</button>
         </header>
 
-        <div class="flex-1 overflow-y-auto px-4 pb-28">
+        <div class="flex-1 custom-scroll px-4 pb-28">
             <div id="categories-container" class="grid grid-cols-2 gap-4"></div>
+            
             <div id="research-list-container" class="hidden">
-                <div class="flex items-center justify-between mb-5 px-2">
+                <div class="sticky top-0 bg-[#f8fafc]/90 backdrop-blur-md py-4 z-10 flex items-center justify-between mb-5 px-2">
                     <button onclick="showCategories()" class="text-green-600 text-xs font-black bg-green-50 px-4 py-2 rounded-xl">🔙 العودة</button>
                     <span id="current-cat-name" class="text-[10px] font-black text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full uppercase"></span>
                 </div>
-                <div id="research-list" class="space-y-3"></div>
+                <div id="research-list" class="space-y-3 pb-10"></div>
             </div>
         </div>
     </div>
 
     <div id="search-overlay" class="fixed inset-0 z-[100] flex flex-col">
-        <div class="p-6 border-b border-slate-100 flex items-center gap-4">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-4 shrink-0">
             <button onclick="closeGlobalSearch()" class="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full">✕</button>
             <input type="text" id="global-search-input" oninput="handleGlobalSearch()" placeholder="ابدأ البحث المخصص..." class="flex-1 p-4 bg-slate-100 rounded-2xl border-none outline-none font-bold">
         </div>
-        <div class="px-6 py-4 flex gap-3 overflow-x-auto no-scrollbar">
+        <div class="px-6 py-4 flex gap-3 overflow-x-auto no-scrollbar shrink-0">
             <button onclick="setSearchFilter('cats')" class="px-5 py-2 rounded-xl text-[11px] font-black filter-btn active" id="f-cats">الأقسام</button>
-            <button onclick="setSearchFilter('titles')" class="px-5 py-2 rounded-xl text-[11px] font-black filter-btn" id="f-titles">البحوث</button>
+            <button onclick="setSearchFilter('titles')" class="px-5 py-2 rounded-xl text-[11px] font-black filter-btn" id="f-titles">عناوين االأقسام</button>
             <button onclick="setSearchFilter('content')" class="px-5 py-2 rounded-xl text-[11px] font-black filter-btn" id="f-content">المحتوى</button>
         </div>
-        <div id="global-results" class="flex-1 overflow-y-auto px-6 pb-10"></div>
+        <div id="global-results" class="flex-1 custom-scroll px-6 pb-10"></div>
     </div>
 
     <div id="internal-search-overlay" class="fixed inset-0 z-[130] flex flex-col">
-        <div class="p-6 border-b border-slate-100 flex items-center gap-4">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-4 shrink-0">
             <button onclick="closeInternalSearch()" class="w-10 h-10 flex items-center justify-center bg-slate-50 rounded-full text-slate-400">✕</button>
             <input type="text" id="reader-internal-input" oninput="internalSearchInContent()" placeholder="بحث سريع في الصفحات..." class="flex-1 p-4 bg-slate-100 rounded-2xl border-none outline-none font-bold">
         </div>
-        <div id="internal-results" class="flex-1 overflow-y-auto px-6 py-6"></div>
+        <div id="internal-results" class="flex-1 custom-scroll px-6 py-6"></div>
     </div>
 
     <div id="reader-view" class="hidden fixed inset-0 z-[110] flex flex-col">
@@ -105,11 +115,11 @@
             </div>
         </header>
 
-        <main id="reader-scroll-area" class="flex-1 overflow-y-auto px-6 py-10">
+        <main id="reader-scroll-area" class="flex-1 custom-scroll px-6 py-10">
             <div id="reader-content" class="book-content max-w-xl mx-auto"></div>
         </main>
 
-        <footer class="h-20 flex items-center justify-center">
+        <footer class="h-20 flex items-center justify-center shrink-0">
             <div class="flex items-center gap-10 bg-slate-900 text-white px-8 py-3 rounded-full shadow-2xl">
                 <button onclick="changePage(-1)">◀</button>
                 <span id="page-indicator" class="text-[11px] font-black min-w-[50px] text-center"></span>
@@ -274,4 +284,4 @@
         function setSearchFilter(f) { searchFilter = f; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.id === 'f-'+f)); handleGlobalSearch(); }
     </script>
 </body>
-                        </html>
+</html>
