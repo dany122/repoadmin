@@ -48,6 +48,7 @@
             margin-bottom: 12px; cursor: pointer; transition: 0.2s; color: #1e293b;
         }
         
+        /* تحسين السكرول للحاويات */
         .custom-scroll {
             overflow-y: auto;
             overflow-x: hidden;
@@ -63,7 +64,7 @@
         <header class="p-6 flex justify-between items-center shrink-0">
             <div>
                 <h1 class="text-2xl font-black text-slate-900">المكتبة</h1>
-                <p class="text-[10px] text-slate-400 font-bold border-r-2 border-green-600 pr-2 mt-1 uppercase">الترابية</p>
+                <p class="text-[10px] text-slate-400 font-bold border-r-2 border-green-600 pr-2 mt-1 uppercase">الترابية </p>
             </div>
             <button onclick="openGlobalSearch()" class="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center border border-slate-100">🔍</button>
         </header>
@@ -227,6 +228,11 @@
 
         function renderCurrentPage() {
             let text = currentPages[currentPageIndex];
+            
+            // --- التعديل هنا: ضمان ظهور الأسطر الجديدة في القراءة ---
+            // يقوم باستبدال أي سطر جديد (Enter) بوسم <br> ليظهر في HTML
+            text = text.replace(/\n/g, '<br>'); 
+            
             if (highlightQuery && highlightQuery.length > 1) {
                 const escapedQuery = highlightQuery.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
                 const regex = new RegExp(`(${escapedQuery})`, "g");
@@ -253,6 +259,7 @@
             const cats = [...new Set(allResearches.map(r => r.category || "عام"))];
             container.innerHTML = cats.map(cat => `
                 <div onclick="showResearchInCat('${cat}')" class="bg-white p-6 rounded-3xl flex flex-col items-center gap-3 border border-slate-100 shadow-sm active:scale-95 transition">
+                   
                     <span class="font-black text-slate-700 text-[11px] text-center">${cat}</span>
                 </div>
             `).join('');
@@ -282,4 +289,4 @@
         function setSearchFilter(f) { searchFilter = f; document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', btn.id === 'f-'+f)); handleGlobalSearch(); }
     </script>
 </body>
-    </html>
+                    </html>
