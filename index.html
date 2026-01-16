@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>إدارة المكتبة |   </title>
+    <title>إدارة المكتبة - تحديث الأقسام</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -12,117 +12,79 @@
     
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #fcfcfc; color: #1e293b; }
-        
         .view-step { display: none; animation: slideIn 0.3s ease-out; }
         .view-step.active { display: block; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
-        .cat-card {
-            background: white;
-            padding: 12px 16px;
-            border-radius: 14px;
-            border: 1px solid #f1f5f9;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .cat-card:active { transform: scale(0.97); background: #f8fafc; }
-
-        .res-item {
-            background: white;
-            padding: 10px 14px;
-            border-radius: 10px;
-            border-right: 4px solid #16a34a;
-            border-bottom: 1px solid #f1f5f9;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            transition: 0.2s;
-        }
-        .res-item:active { background: #f0fdf4; }
-
-        .truncate-text {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            max-width: 80%;
-        }
-
+        .truncate-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
         ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
 <body class="pb-10">
 
-    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 p-4 flex justify-between items-center border-b">
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-40 p-4 flex justify-between items-center border-b shadow-sm">
         <div class="flex items-center gap-2">
             <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white text-xs font-black">Admin</div>
-            <h1 class="font-bold text-slate-800">الترابية</h1>
+            <h1 class="font-bold text-slate-800">لوحة التحكم</h1>
         </div>
-        <button onclick="openEditor()" class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-xs font-bold active:scale-90 transition">+ بحث جديد</button>
+        <button onclick="openEditor()" class="bg-slate-900 text-white px-4 py-1.5 rounded-full text-xs font-bold active:scale-90 transition shadow-lg">+ إضافة جديد</button>
     </header>
 
     <main class="p-4 max-w-xl mx-auto">
-        
         <div id="view-categories" class="view-step active">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-black text-slate-500 uppercase tracking-tighter">المجلدات والأقسام</h2>
-            </div>
+            <h2 class="text-xs font-black text-slate-400 mb-4 uppercase tracking-wider">الأقسام المجلدات</h2>
             <div id="cats-list" class="space-y-3"></div>
         </div>
 
         <div id="view-researches" class="view-step">
             <div class="flex items-center gap-2 mb-6">
-                <button onclick="showView('view-categories')" class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">🔙</button>
+                <button onclick="showView('view-categories')" class="w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm">عودة</button>
                 <h2 id="selected-cat-name" class="text-lg font-black text-slate-800 truncate"></h2>
             </div>
-            
-            <div id="res-list">
-                </div>
+            <div id="res-list" class="space-y-2"></div>
         </div>
     </main>
 
+    <div id="cat-edit-overlay" class="hidden fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-6 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl">
+            <h3 class="font-black text-slate-800 mb-4">تعديل اسم القسم</h3>
+            <p class="text-[11px] text-slate-400 mb-4">سيتم تغيير الاسم في جميع الأبحاث التابعة له.</p>
+            <input type="hidden" id="old-cat-name">
+            <input type="text" id="new-cat-name" class="w-full p-4 bg-slate-100 rounded-xl border-none outline-none font-bold mb-4" placeholder="الاسم الجديد...">
+            <div class="flex gap-2">
+                <button onclick="confirmRenameCategory()" class="flex-1 bg-green-600 text-white py-3 rounded-xl font-bold text-sm">تحديث الآن</button>
+                <button onclick="closeCatEditor()" class="flex-1 bg-slate-100 text-slate-500 py-3 rounded-xl font-bold text-sm">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
     <div id="editor-overlay" class="hidden fixed inset-0 z-50 bg-white p-6 overflow-y-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h3 id="editor-mode-title" class="text-lg font-black text-slate-900">تحرير البيانات</h3>
-            <button onclick="closeEditor()" class="bg-slate-50 text-slate-400 p-2 rounded-full">✕</button>
+        <div class="flex justify-between items-center mb-8 border-b border-slate-100 pb-4">
+            <h3 id="editor-mode-title" class="text-xl font-black text-slate-900">بيانات البحث</h3>
+            <button onclick="closeEditor()" class="bg-slate-100 text-slate-500 w-8 h-8 rounded-full font-bold">✕</button>
         </div>
 
-        <div class="space-y-4">
+        <div class="space-y-5">
             <input type="hidden" id="edit-id">
-            
             <div>
-                <label class="text-[10px] font-bold text-slate-400 mr-2 uppercase">عنوان البحث</label>
-                <input type="text" id="edit-title" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-100 outline-none focus:border-green-500 text-sm">
+                <label class="block text-xs font-black text-slate-500 mb-2">عنوان البحث</label>
+                <input type="text" id="edit-title" class="w-full p-4 bg-slate-50 rounded-xl border border-slate-200 outline-none font-bold text-slate-700">
             </div>
-
             <div>
-                <label class="text-[10px] font-bold text-slate-400 mr-2 uppercase">القسم</label>
+                <label class="block text-xs font-black text-slate-500 mb-2">القسم / المجلد</label>
                 <div class="space-y-2">
-                    <select id="select-existing-cat" onchange="syncCategory(this.value)" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-100 text-sm outline-none font-bold text-slate-600">
-                        <option value="">-- اختر من المحفوظ --</option>
+                    <select id="select-existing-cat" onchange="syncCategory(this.value)" class="w-full p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 outline-none">
+                        <option value="">-- اختر قسماً موجوداً --</option>
                     </select>
-                    <input type="text" id="edit-category" placeholder="أو اكتب اسماً جديداً..." class="w-full p-3 bg-white border-2 border-dashed border-slate-200 rounded-xl outline-none focus:border-green-500 text-sm">
+                    <input type="text" id="edit-category" placeholder="أو اكتب اسماً جديداً..." class="w-full p-3 bg-white border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm">
                 </div>
             </div>
-
             <div>
-                <div class="flex items-center justify-between mb-2">
-                    <label class="text-[10px] font-bold text-slate-400 mr-2 uppercase">محتوى البحث</label>
-                    <div class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-lg">
-                        <input type="checkbox" id="auto-split-toggle" checked class="accent-green-600 w-4 h-4">
-                        <label for="auto-split-toggle" class="text-[10px] font-bold text-green-700 cursor-pointer">تقسيم تلقائي للصفحات</label>
-                    </div>
-                </div>
-                <textarea id="edit-content" rows="10" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 outline-none text-sm leading-relaxed"></textarea>
+                <label class="text-xs font-black text-slate-500 block mb-2">المحتوى النصي</label>
+                <textarea id="edit-content" rows="12" class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-200 outline-none text-sm leading-relaxed"></textarea>
             </div>
-
-            <div class="flex gap-2 pt-6">
-                <button id="btn-save" onclick="handleSave()" class="flex-[2] bg-green-600 text-white py-4 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition">حفظ التغييرات</button>
-                <button id="btn-delete" onclick="handleDelete()" class="hidden flex-1 bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-sm">حذف</button>
+            <div class="flex gap-3 pt-4">
+                <button onclick="handleSave()" class="flex-[2] bg-green-600 text-white py-4 rounded-xl font-black text-sm shadow-lg">حفظ التغييرات</button>
+                <button id="btn-delete" onclick="handleDelete()" class="hidden flex-1 bg-red-50 text-red-600 py-4 rounded-xl font-bold text-sm">حذف</button>
             </div>
         </div>
     </div>
@@ -133,7 +95,6 @@
             authDomain: "alturbya.firebaseapp.com",
             projectId: "alturbya",
             storageBucket: "alturbya.firebasestorage.app",
-            messagingSenderId: "481479317412",
             appId: "1:481479317412:web:8f070dbc4c87ba5aa59331"
         };
         firebase.initializeApp(firebaseConfig);
@@ -147,68 +108,99 @@
         });
 
         function updateUI() {
-            const categories = [...new Set(allResearches.map(r => r.category || "عام"))];
+            const categories = [...new Set(allResearches.map(r => r.category || "عام"))].sort();
             
             document.getElementById('cats-list').innerHTML = categories.map(cat => {
                 const count = allResearches.filter(r => r.category === cat).length;
                 return `
-                    <div onclick="showResearchesInCat('${cat}')" class="cat-card">
-                        <div class="flex items-center gap-3">
-                            <span class="text-xl">📂</span>
+                    <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                        <div onclick="showResearchesInCat('${cat}')" class="flex items-center gap-3 flex-1 cursor-pointer">
+                            <span class="text-lg">📁</span>
                             <span class="font-bold text-slate-700 text-sm">${cat}</span>
+                            <span class="bg-slate-50 text-slate-400 text-[9px] px-2 py-0.5 rounded-full font-bold">${count}</span>
                         </div>
-                        <span class="bg-slate-100 text-slate-500 text-[9px] px-2 py-1 rounded-full font-black">${count} بحث</span>
+                        <button onclick="openCatEditor('${cat}')" class="w-9 h-9 flex items-center justify-center bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-100 transition shadow-sm">
+                            ✏️
+                        </button>
                     </div>
                 `;
             }).join('');
 
-            document.getElementById('select-existing-cat').innerHTML = '<option value="">-- اختر من المحفوظ --</option>' + 
+            document.getElementById('select-existing-cat').innerHTML = 
+                '<option value="">-- اختر قسماً موجوداً --</option>' + 
                 categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
         }
 
+        // --- وظائف تعديل اسم القسم (المجلد) ---
+        function openCatEditor(oldName) {
+            document.getElementById('old-cat-name').value = oldName;
+            document.getElementById('new-cat-name').value = oldName;
+            document.getElementById('cat-edit-overlay').classList.remove('hidden');
+        }
+
+        function closeCatEditor() {
+            document.getElementById('cat-edit-overlay').classList.add('hidden');
+        }
+
+        async function confirmRenameCategory() {
+            const oldName = document.getElementById('old-cat-name').value;
+            const newName = document.getElementById('new-cat-name').value.trim();
+
+            if (!newName || oldName === newName) {
+                closeCatEditor();
+                return;
+            }
+
+            const toUpdate = allResearches.filter(r => r.category === oldName);
+            
+            if (confirm(`سيتم تغيير اسم القسم لـ (${toUpdate.length}) بحث. هل أنت متأكد؟`)) {
+                const batch = db.batch();
+                toUpdate.forEach(doc => {
+                    const ref = db.collection("researches").doc(doc.id);
+                    batch.update(ref, { category: newName });
+                });
+
+                try {
+                    await batch.commit();
+                    alert("تم تحديث اسم القسم بنجاح!");
+                    closeCatEditor();
+                } catch (e) {
+                    alert("خطأ أثناء التحديث: " + e.message);
+                }
+            }
+        }
+
+        // --- وظائف الأبحاث المعتادة ---
         function showResearchesInCat(cat) {
             document.getElementById('selected-cat-name').innerText = cat;
             const resList = document.getElementById('res-list');
             const filtered = allResearches.filter(r => r.category === cat);
-            
             resList.innerHTML = filtered.map(r => `
-                <div onclick="openEditor('${r.id}')" class="res-item">
-                    <span class="text-xs font-bold text-slate-700 truncate-text">${r.t}</span>
-                    <span class="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded">✏️ تعديل</span>
+                <div onclick="openEditor('${r.id}')" class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer active:scale-95 transition">
+                    <span class="text-sm font-bold text-slate-800 truncate-text">${r.t}</span>
+                    <span class="text-[10px] text-green-600 font-bold">تعديل</span>
                 </div>
             `).join('');
-            
             showView('view-researches');
         }
 
         async function openEditor(id = null) {
-            const overlay = document.getElementById('editor-overlay');
             if (id) {
                 const res = allResearches.find(r => r.id === id);
                 document.getElementById('edit-id').value = id;
                 document.getElementById('edit-title').value = res.t;
                 document.getElementById('edit-category').value = res.category || "";
                 document.getElementById('select-existing-cat').value = res.category || "";
-                
-                // تعديل هنا: تحميل النص الخام إذا وجد، أو تنظيف النص القديم من رموز <br>
-                let contentToEdit = res.x;
-                if (!contentToEdit && res.pages) {
-                     // دعم للبيانات القديمة: تجميع الصفحات وتحويل <br> لسطر جديد
-                     contentToEdit = res.pages.join('').replace(/<br\s*\/?>/gi, '\n');
-                }
-                document.getElementById('edit-content').value = contentToEdit || "";
-                
-                document.getElementById('auto-split-toggle').checked = true; 
+                document.getElementById('edit-content').value = res.x || "";
                 document.getElementById('btn-delete').classList.remove('hidden');
             } else {
                 document.getElementById('edit-id').value = "";
                 document.getElementById('edit-title').value = "";
                 document.getElementById('edit-category').value = "";
                 document.getElementById('edit-content').value = "";
-                document.getElementById('auto-split-toggle').checked = true;
                 document.getElementById('btn-delete').classList.add('hidden');
             }
-            overlay.classList.remove('hidden');
+            document.getElementById('editor-overlay').classList.remove('hidden');
         }
 
         async function handleSave() {
@@ -216,44 +208,24 @@
             const title = document.getElementById('edit-title').value;
             const cat = document.getElementById('edit-category').value;
             const content = document.getElementById('edit-content').value;
-            const isAutoSplit = document.getElementById('auto-split-toggle').checked;
-
-            if (!title || !content) return;
 
             const pages = [];
-            if (isAutoSplit) {
-                const chunkSize = 1100;
-                for (let i = 0; i < content.length; i += chunkSize) {
-                    let chunk = content.substring(i, i + chunkSize);
-                    // التعديل هنا: تحويل النزول لسطر إلى كود HTML ليظهر في القارئ
-                    let displayChunk = chunk.replace(/\n/g, '<br>');
-                    pages.push(displayChunk); 
-                }
-            } else {
-                // حتى لو صفحة واحدة، نحول الأسطر
-                pages.push(content.replace(/\n/g, '<br>'));
+            const chunkSize = 1100;
+            for (let i = 0; i < content.length; i += chunkSize) {
+                pages.push(content.substring(i, i + chunkSize).replace(/\n/g, '<br>'));
             }
 
-            // نحفظ x كما هو (نص عادي) للتعديل لاحقاً
-            // ونحفظ pages (محولة لـ HTML) للقارئ
-            const data = { 
-                t: title, 
-                category: cat || "عام", 
-                x: content, 
-                pages: pages, 
-                updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-            };
+            const data = { t: title, category: cat || "عام", x: content, pages: pages };
 
-            try {
-                if (id) await db.collection("researches").doc(id).update(data);
-                else await db.collection("researches").add(data);
-                closeEditor();
-            } catch (e) { alert("خطأ!"); }
+            if (id) await db.collection("researches").doc(id).update(data);
+            else await db.collection("researches").add(data);
+            
+            closeEditor();
         }
 
         function handleDelete() {
             const id = document.getElementById('edit-id').value;
-            if (confirm("حذف؟") && id) {
+            if (confirm("حذف نهائي؟") && id) {
                 db.collection("researches").doc(id).delete();
                 closeEditor();
                 showView('view-categories');
@@ -264,9 +236,8 @@
             document.querySelectorAll('.view-step').forEach(v => v.classList.remove('active'));
             document.getElementById(viewId).classList.add('active');
         }
-
         function closeEditor() { document.getElementById('editor-overlay').classList.add('hidden'); }
         function syncCategory(val) { if (val) document.getElementById('edit-category').value = val; }
     </script>
 </body>
-</html>
+    </html>
